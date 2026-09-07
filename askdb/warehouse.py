@@ -39,7 +39,23 @@ from __future__ import annotations
 
 import sqlite3
 
-SCHEMA = """
+# A shared-cache in-memory database rather than a plain ":memory:" one, so that a
+# SECOND connection can be opened to the same data. That is not a detail: lesson 5
+# hands generated SQL a different connection with fewer privileges, and "a different
+# connection" is only meaningful if both see the same rows. The database lives as long
+# as one connection to it stays open.
+DB_URI = "file:askdb_warehouse?mode=memory&cache=shared"
+
+# Dropped first so `connect()` can be called more than once in a process (the tests do)
+# without tripping over tables that already exist.
+_RESET = """
+DROP TABLE IF EXISTS refunds;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS customers;
+"""
+
+TABLES = """
 CREATE TABLE customers (
     id          INTEGER PRIMARY KEY,
     name        TEXT    NOT NULL,
@@ -72,6 +88,8 @@ CREATE TABLE refunds (
     refunded_at   TEXT    NOT NULL
 );
 """
+
+SCHEMA = _RESET + TABLES
 
 CUSTOMERS = [
     (1, "Ada Okafor",     "Nigeria",     "ada@example.com",    "2024-11-02"),
@@ -126,7 +144,7 @@ def connect() -> sqlite3.Connection:
     permits. Lesson 5 hands generated SQL a *different*, restricted connection, which
     is the entire point of that lesson.
     """
-    conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect(DB_URI, uri=True)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
     conn.executemany("INSERT INTO customers VALUES (?,?,?,?,?)", CUSTOMERS)
@@ -144,7 +162,7 @@ def schema_ddl() -> str:
     counts, no sample values, no comments explaining that `total_cents` is in cents.
     Lesson 1 adds those and measures whether they helped.
     """
-    return SCHEMA.strip()
+    return TABLES.strip()
 
 
 def usd(cents: int | float) -> str:
