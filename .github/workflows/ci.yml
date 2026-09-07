@@ -1,0 +1,41 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python check_setup.py
+      - run: python -m compileall -q askdb examples hands_on tests
+      # -O strips assertions, so this also proves nothing enforces behavior with one.
+      - run: python -O -m unittest discover -s tests -v
+      - name: Run every lesson
+        run: |
+          for example in examples/[0-9][0-9]_*.py; do
+            echo "--- $example"
+            python "$example"
+          done
+      - name: Run the capstone as a gate
+        run: python hands_on/benchmark.py
+      - name: The capstone must fail below its threshold
+        run: |
+          if python hands_on/benchmark.py --level bare > /dev/null; then
+            echo "the bare level scored above the threshold; the gate is not gating"
+            exit 1
+          fi
