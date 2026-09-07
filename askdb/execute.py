@@ -70,11 +70,17 @@ def run(conn: sqlite3.Connection, sql: str, *, max_rows: int = MAX_ROWS) -> Resu
 
     try:
         rows = cursor.fetchmany(max_rows + 1)
+        columns = tuple(d[0] for d in cursor.description or ())
     except sqlite3.Error as exc:            # errors can surface during iteration too
         return Result(error=f"{type(exc).__name__}: {exc}")
+    finally:
+        # Close it. An open cursor holds a read lock on the tables it touched, and in
+        # SQLite's shared-cache mode that lock blocks writers on OTHER connections.
+        # Leaving them open is how a harness that only ever reads still manages to
+        # deadlock the process that maintains the fixture.
+        cursor.close()
 
     truncated = len(rows) > max_rows
-    columns = tuple(d[0] for d in cursor.description or ())
     return Result(
         columns=columns,
         rows=tuple(tuple(r) for r in rows[:max_rows]),
