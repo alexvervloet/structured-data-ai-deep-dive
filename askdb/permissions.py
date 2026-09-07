@@ -78,6 +78,22 @@ def analyst_connection(*, deny_columns: bool = True) -> sqlite3.Connection:
     return conn
 
 
+#: Signatures SQLite uses when the boundary refuses a statement. Matching on message
+#: text is not lovely, and it is what the driver gives us: both refusals arrive as
+#: ordinary errors. The distinction is worth the ugliness, because "the model wrote a
+#: query that does not parse" and "the model tried to read PII and was stopped" are
+#: different events, and folding them together hides the one you need to see.
+_REFUSAL_SIGNATURES = ("is prohibited", "readonly database", "not authorized")
+
+
+def is_permission_error(message: str | None) -> bool:
+    """Did the boundary refuse this, as opposed to the query simply being broken?"""
+    if not message:
+        return False
+    lowered = message.lower()
+    return any(signature in lowered for signature in _REFUSAL_SIGNATURES)
+
+
 def describe_boundary() -> str:
     denied = ", ".join(f"{t}.{c}" for t, c in sorted(DENIED_COLUMNS))
     return (
