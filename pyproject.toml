@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "structured-data-ai-deep-dive"
+version = "0.1.0"
+description = "Offline-first lessons for generating, evaluating, and constraining SQL written by a model"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Alex Vervloet" }]
+dependencies = []
+
+[project.optional-dependencies]
+openai = ["openai>=1.60,<3"]
+claude = ["anthropic>=0.45,<1"]
+
+[tool.setuptools.packages.find]
+include = ["askdb*"]
