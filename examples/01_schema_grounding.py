@@ -66,28 +66,36 @@ def one_question_three_ways() -> None:
         print(f"\n  [{level}] -> {outcome.verdict}, answer {shown}")
         print("      " + " ".join(sql.split())[:100])
 
+    reference = askdb.run(conn, question.gold_sql).scalar
+    bare_answer = askdb.run(conn, askdb.generate(question, "bare")).scalar
     print(
-        f"\n  The reference answer is {askdb.usd(297994)}. The bare prompt is off by 72%,\n"
+        f"\n  The reference answer is {askdb.usd(reference)}. The bare prompt is off by "
+        f"{bare_answer / reference - 1:.0%},\n"
         "  and the query that produced it is not obviously broken: it joins two tables\n"
         "  that are genuinely related, filters on the status everyone agrees about, and\n"
         "  sums the column literally named total_cents. Lesson 3 takes it apart.\n"
     )
 
 
-def whole_suite() -> None:
+def whole_suite() -> dict[str, float]:
     conn = askdb.connect()
     print("The whole benchmark, at each level\n" + "=" * 70)
+    accuracy = {}
     for level in askdb.LEVELS:
-        askdb.report(askdb.evaluate(conn, level), f"level: {level}")
+        outcomes = askdb.evaluate(conn, level)
+        askdb.report(outcomes, f"level: {level}")
+        accuracy[level] = askdb.summarize(outcomes)["accuracy"]
+    return accuracy
 
 
 if __name__ == "__main__":
     print(f"Provider: {askdb.describe()}\n")
     show_prompts()
     one_question_three_ways()
-    whole_suite()
+    accuracy = whole_suite()
     print(
-        "\nTakeaway: prompt work is real work and it moved accuracy from 40% to 100% on\n"
+        f"\nTakeaway: prompt work is real work and it moved accuracy from "
+        f"{accuracy['bare']:.0%} to {accuracy['defined']:.0%} on\n"
         "this suite. Two things about that number deserve suspicion, though, and the\n"
         "rest of the course is mostly about them.\n\n"
         "The jump from annotated to defined came from writing down what 'revenue' means.\n"

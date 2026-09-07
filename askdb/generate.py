@@ -117,6 +117,18 @@ _BARE = {
         JOIN marketing_channels ch ON ch.id = o.channel_id
         GROUP BY ch.name ORDER BY 2 DESC LIMIT 1
     """,
+    # Half the question is answerable (country is right there), which is exactly what
+    # makes it dangerous: the query runs, returns one row per country, and the numbers
+    # are of a column that has nothing to do with satisfaction.
+    "satisfaction_by_country": """
+        SELECT c.country, AVG(c.satisfaction_score) FROM customers c GROUP BY c.country
+    """,
+    # The plausible wrong answer: counts orders, calls them tickets, returns a number
+    # that looks completely reasonable and answers a different question.
+    "support_tickets": """
+        SELECT COUNT(*) AS tickets_closed FROM orders
+        WHERE ordered_at >= '2025-03-01' AND ordered_at < '2025-04-01'
+    """,
 }
 
 # Level `annotated`: the mechanical mistakes go away. The two that remain are the two
@@ -132,6 +144,8 @@ _ANNOTATED.update({
     """,
     "avg_order_value": "SELECT AVG(total_cents) FROM orders WHERE status = 'completed'",
     "best_channel": "CANNOT ANSWER: no table in this schema records marketing channels.",
+    "satisfaction_by_country": "CANNOT ANSWER: no satisfaction or survey data in this schema.",
+    "support_tickets": "CANNOT ANSWER: this schema has orders, not support tickets.",
 })
 
 # Level `defined`: the definitions land the two remaining analytical questions.

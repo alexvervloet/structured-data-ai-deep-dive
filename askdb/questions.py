@@ -136,6 +136,22 @@ QUESTIONS: tuple[Question, ...] = (
         answerable=False,
         trap="inventing a channels table, or silently answering a different question",
     ),
+    Question(
+        id="satisfaction_by_country",
+        text="What is the average customer satisfaction score by country?",
+        gold_sql="",
+        category="abstention",
+        answerable=False,
+        trap="country exists, so half the question is answerable and invites a guess",
+    ),
+    Question(
+        id="support_tickets",
+        text="How many support tickets did we close in March?",
+        gold_sql="",
+        category="abstention",
+        answerable=False,
+        trap="counting orders instead, which is a plausible-looking wrong answer",
+    ),
 )
 
 BY_ID = {q.id: q for q in QUESTIONS}
