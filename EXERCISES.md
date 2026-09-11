@@ -3,7 +3,7 @@
 Predict before you run. The point of each of these is the gap between what you expected
 and what happened, and you only get that gap if you commit to an answer first.
 
-Each section pairs with one lesson. Answers are collapsed; open them after you have
+Each section pairs with one lesson. Answers are collapsed; open them after you've
 written yours down.
 
 ---
@@ -22,7 +22,7 @@ in that relationship, and it inflates the total by 1.72x. Nothing in the DDL say
 many line items a typical order has, or that summing a parent column across that join
 double counts.
 
-The general form: a schema tells the model what exists. It does not say what is true.
+The general form: a schema tells the model what exists. It doesn't say what's true.
 Cardinality, which statuses mean money, whether refunds are already netted out, which
 of two date columns the business uses. All absent, all decisive.
 </details>
@@ -37,8 +37,8 @@ revenue subtracts refunds. Neither is a prompting technique. Both are decisions 
 in finance made, transcribed into the prompt.
 
 Worth sitting with, because the accuracy jump from 83% to 100% is entirely attributable
-to them. If you reported that as "prompt engineering improved accuracy by 17 points" you
-would be describing the work incorrectly, and the next team to try it would go looking
+to them. If you reported that as "prompt engineering improved accuracy by 17 points" you'd
+be describing the work incorrectly, and the next team to try it would go looking
 for the technique instead of the meeting.
 </details>
 
@@ -57,8 +57,8 @@ The rankings are opposite. The broken one is a 67% text match and returns $1,629
 much. The correct one is a 43% match and returns the identical answer.
 
 The consequence is stronger than "string matching is noisy". Because the wrong query is
-*more* similar than the right one, there is no threshold anywhere that accepts one and
-rejects the other. The metric cannot be tuned into working. It is measuring the wrong
+*more* similar than the right one, there's no threshold anywhere that accepts one and
+rejects the other. The metric can't be tuned into working. It's measuring the wrong
 property, and the only repair is to measure a different one.
 </details>
 
@@ -69,8 +69,8 @@ a change can you make?
 <details><summary>▸ Answer</summary>
 
 One character will do it: change `'completed'` to `'completed '` and the filter matches
-nothing. `SUM` over no rows returns NULL rather than 0, so the answer is not merely
-wrong, it is a different type, and any code adding it to another figure will fail
+nothing. `SUM` over no rows returns NULL rather than 0, so the answer isn't merely
+wrong, it's a different type, and any code adding it to another figure will fail
 somewhere far away from the cause.
 
 Comparisons like `>=` to `>` on a date boundary, or `AND` to `OR` in a two-clause WHERE,
@@ -95,11 +95,11 @@ Flip that (many small orders with many lines, one large order with one line) and
 error lands below it.
 
 Which is the real lesson. The size of this bug depends on which rows happen to have
-many children, so it moves month to month and there is no constant that corrects it.
+many children, so it moves month to month and there's no constant that corrects it.
 </details>
 
 **Do.** Write a query that answers "total completed revenue" correctly *while still
-joining* `order_items`. Then say why you would not ship it.
+joining* `order_items`. Then say why you wouldn't ship it.
 
 <details><summary>▸ Answer</summary>
 
@@ -113,9 +113,9 @@ JOIN (SELECT order_id, COUNT(*) AS lines FROM order_items GROUP BY order_id) i
 WHERE o.status = 'completed';
 ```
 
-You would not ship it because the join contributes nothing to the answer. `orders`
+You wouldn't ship it because the join contributes nothing to the answer. `orders`
 already holds the total. The best fix for a fan-out bug is usually to delete the join,
-and a query carrying a join it does not need is a fan-out bug waiting for the next
+and a query carrying a join it doesn't need is a fan-out bug waiting for the next
 person to add a `SUM`.
 </details>
 
@@ -136,12 +136,12 @@ No. It picks `shipped_at` and comes in $450 low, because one order was placed on
 31st and shipped April 1st.
 
 None of the four warnings is a ruling on when revenue is booked, and no number of
-additional careful sentences would be, because the information is not the kind that can
+additional careful sentences would be, because the information isn't the kind that can
 be inferred. Someone has to decide. The `defined` level works for exactly one reason:
 somebody did, and wrote it down.
 </details>
 
-**Recall.** You are handed a wrong number from a text-to-SQL system. What is the first
+**Recall.** You're handed a wrong number from a text-to-SQL system. What's the first
 question to ask, before looking at the model, the prompt, or the retrieval?
 
 <details><summary>▸ Answer</summary>
@@ -168,7 +168,7 @@ it in review.
 
 Whether the system should have been allowed to do what it did. Correctness asks whether
 the answer was right. `SELECT email FROM customers` is a completely correct answer to
-"list every customer's email address", and it is the query you least want your system to
+"list every customer's email address", and it's the query you least want your system to
 run successfully.
 
 Scored on the analyst connection, the same run reports 92% with one BLOCKED, and the
@@ -205,10 +205,10 @@ question whose only correct answer requires it. What verdict should the benchmar
 
 <details><summary>▸ Answer</summary>
 
-BLOCKED, and that is the right outcome rather than a gap. The question is answerable by
+BLOCKED, and that's the right outcome rather than a gap. The question is answerable by
 the schema and not answerable by this role, which is a distinction worth having in the
 output. A system that reports it as an ERROR loses the information that the query was
-fine and the permissions stopped it, and that is exactly the signal you want to watch.
+fine and the permissions stopped it, and that's exactly the signal you want to watch.
 </details>
 
 ---
@@ -234,8 +234,8 @@ fictional.
 
 The third is the worst, because counting orders in March returns a number that is
 completely plausible, correctly computed, and about a different thing. Nothing in the
-output indicates that "tickets" and "orders" are not the same concept. This is the near
-miss, and it is the reason abstention matters more than one more point of accuracy.
+output indicates that "tickets" and "orders" aren't the same concept. This is the near
+miss, and it's the reason abstention matters more than one more point of accuracy.
 </details>
 
 **Recall.** What single change to the prompt makes the model start refusing?
@@ -245,7 +245,7 @@ miss, and it is the reason abstention matters more than one more point of accura
 Telling it that refusal is an allowed output: `If the schema cannot answer the question,
 output exactly: CANNOT ANSWER: <reason>`.
 
-A model asked only to write SQL will write SQL, because that is compliance. Giving it a
+A model asked only to write SQL will write SQL, because that's compliance. Giving it a
 named, licensed way to decline changes refusal from a failure to follow instructions
 into following them. The surrounding code then has to pass that through as an abstention
 rather than trying to parse it as SQL, which is the unglamorous half.
@@ -253,7 +253,7 @@ rather than trying to parse it as SQL, which is the unglamorous half.
 
 **Do.** Push abstention too far. Add "If you are not completely certain, output CANNOT
 ANSWER" to the prompt and rerun the suite. Watch the ABSTAINED count rise on questions
-the system used to get right, and decide what you would tell a user whose reasonable
+the system used to get right, and decide what you'd tell a user whose reasonable
 question was declined.
 
 ---
@@ -266,10 +266,10 @@ same data. Which reports a higher number, and which one would you put in a docum
 <details><summary>▸ Answer</summary>
 
 The owner connection reports 100%; the analyst connection reports 92%. The lower one is
-the number that describes the system you deploy, so it is the only one worth reporting.
+the number that describes the system you deploy, so it's the only one worth reporting.
 
 The general rule is worth more than this example. An eval that runs with more privilege
-than production is measuring a system you do not ship, and it will always report a
+than production is measuring a system you don't ship, and it'll always report a
 better number than the truth, which is the direction that never prompts anyone to
 investigate.
 </details>
@@ -278,9 +278,9 @@ investigate.
 actually query into `askdb/warehouse.py`, seed enough rows that a fan-out is visible,
 and write ten questions your analysts get asked, with a gold query for each.
 
-The tenth question is where the work is. Somewhere around the sixth you will hit one
-where writing the reference query requires deciding what a word means, and you will not
-be the person who gets to decide. That is the project.
+The tenth question is where the work is. Somewhere around the sixth you'll hit one
+where writing the reference query requires deciding what a word means, and you won't
+be the person who gets to decide. That's the project.
 
 ---
 
