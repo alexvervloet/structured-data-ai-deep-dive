@@ -6,19 +6,19 @@ The demo works on the first afternoon, which is the problem, because everything 
 makes it dangerous shows up later and quietly.
 
 This course is about the later part. It builds a text-to-SQL system and then does the
-work that separates a demo from something you would let a finance team read: executing
+work that separates a demo from something you'd let a finance team read: executing
 the generated SQL against a real database and comparing the rows, catching the join
 that silently multiplies revenue, discovering that "revenue" was never defined, putting
-a permission boundary somewhere a prompt cannot reach, and teaching the thing to refuse
-questions the schema cannot answer.
+a permission boundary somewhere a prompt can't reach, and teaching the thing to refuse
+questions the schema can't answer.
 
 The one big idea:
 
 > **A generated query is a hypothesis. The database is the only thing that can settle it.**
 
-Everything follows from taking that literally. You cannot score SQL by reading it, so
-the eval keeps a database. You cannot trust a prompt to enforce read-only, so the
-connection does. You cannot tell whether "March revenue" is right without a ruling on
+Everything follows from taking that literally. You can't score SQL by reading it, so
+the eval keeps a database. You can't trust a prompt to enforce read-only, so the
+connection does. You can't tell whether "March revenue" is right without a ruling on
 what March revenue means, so the benchmark stores the ruling.
 
 Every lesson runs offline, deterministically, on the standard library. No key, no
@@ -33,19 +33,19 @@ run it. Either order works.
 ## An honest word about the mock
 
 The default model is a lookup table. Its answers were hand-written to reproduce the
-mistakes real models make on real warehouses, and it cannot surprise you, which means
+mistakes real models make on real warehouses, and it can't surprise you, which means
 **no accuracy number in this repository tells you anything about how good models are at
-text-to-SQL.** That is not what it is for.
+text-to-SQL.** That isn't what it's for.
 
-What is real is everything around it: the database, the queries, the execution, the
+What's real is everything around it: the database, the queries, the execution, the
 row-by-row comparison, the failure taxonomy, and the permission boundary. Those are the
-parts you would build yourself, and they are the parts worth learning. When you want a
+parts you'd build yourself, and they're the parts worth learning. When you want a
 number about a model, set `PROVIDER` and run the same harness against it. The harness
 is the deliverable.
 
 ---
 
-## What you will build
+## What you'll build
 
 ```text
 question in English
@@ -91,7 +91,7 @@ PROVIDER=claude secrun python hands_on/benchmark.py --level defined
 
 `check_setup.py` treats `PROVIDER` set with no key as an error rather than falling back
 quietly, because a benchmark that silently scores canned answers is worse than one that
-does not run.
+doesn't run.
 
 ---
 
@@ -99,7 +99,7 @@ does not run.
 
 Putting the schema in the prompt is the first thing every tutorial says, and the
 sentence it usually comes with is wrong: grounding makes invented table names *rarer*,
-not impossible. What is worth measuring is what else in the prompt changes the answer.
+not impossible. What's worth measuring is what else in the prompt changes the answer.
 Three levels, from a bare schema to written-down metric definitions.
 
 ```bash
@@ -111,9 +111,9 @@ misleading in ways the rest of the course unpicks.
 
 ---
 
-## 2. Why you cannot score SQL by reading it
+## 2. Why you can't score SQL by reading it
 
-The tempting eval compares the generated query against a reference query as text. It is
+The tempting eval compares the generated query against a reference query as text. It's
 cheap and it fails in both directions at once. On this set the ranking is *inverted*:
 the query that forgot `WHERE status = 'completed'` is a 67% text match and wrong by
 $1,629.98, while the query that means exactly the same thing matches at 43%.
@@ -122,7 +122,7 @@ $1,629.98, while the query that means exactly the same thing matches at 43%.
 python examples/02_execution_based_eval.py
 ```
 
-There is no similarity threshold that separates them, because similarity is not
+There's no similarity threshold that separates them, because similarity isn't
 measuring the thing you care about. Run the query, compare the rows.
 
 ---
@@ -153,16 +153,16 @@ This warehouse yields five distinct defensible numbers for the one word, the wid
 python examples/04_metric_definitions.py
 ```
 
-This is the ceiling on prompt engineering for analytics, and it is hard. The
+This is the ceiling on prompt engineering for analytics, and it's hard. The
 `annotated` prompt is full of good advice and still picks the wrong date column,
 because none of that advice is a decision about when revenue is booked. What fixes it
 is finance's ruling written down, which is a different input rather than a better prompt.
 
 ---
 
-## 5. The eval says 100% and the system is not safe
+## 5. The eval says 100% and the system isn't safe
 
-The `defined` prompt scores 100%. It will also hand over every customer email address,
+The `defined` prompt scores 100%. It'll also hand over every customer email address,
 because a correctness metric only asks whether what the system did was right, never
 whether it should have been allowed to.
 
@@ -170,7 +170,7 @@ whether it should have been allowed to.
 python examples/05_permissions.py
 ```
 
-`READ-ONLY: SELECT only` in a system prompt is worth keeping and is not a control. It is
+`READ-ONLY: SELECT only` in a system prompt is worth keeping and isn't a control. It's
 a request, in text, addressed to the least trustworthy component in the system, and
 evaluated by that same component. The control is `PRAGMA query_only` plus an authorizer
 callback that denies `customers.email` during statement preparation. Neither reads the
@@ -190,7 +190,7 @@ because the wrong number is at least about your data.
 python examples/06_abstention.py
 ```
 
-Abstention is scored as its own outcome, in both directions: refusing what you cannot
+Abstention is scored as its own outcome, in both directions: refusing what you can't
 answer is correct, and refusing what you could have answered is a real cost that a
 safety-only metric will happily push you toward.
 
@@ -209,8 +209,8 @@ Everything at once: generate, execute through the restricted connection, compare
 report by verdict and by category, exit non-zero below a threshold so it gates a change
 in CI.
 
-The default connection is the analyst's, and that is the capstone's argument. **If your
-eval runs with more privilege than production, it is measuring a system you do not
+The default connection is the analyst's, and that's the capstone's argument. **If your
+eval runs with more privilege than production, it's measuring a system you don't
 deploy.** Compare the two runs: `--connection owner` reports 100% and the permission
 failure disappears from the output entirely.
 
@@ -228,11 +228,11 @@ replaces:
 | `PRAGMA query_only` + authorizer | `GRANT SELECT (col, …)`, no write grants, row-level security per tenant |
 | 12 questions written for the lesson | 20-50 questions your analysts are actually asked, with rulings |
 | Metric definitions in the prompt | A semantic layer (dbt metrics, Cube, LookML) the model queries |
-| A canned mock | The model you are choosing between, scored on the same suite |
+| A canned mock | The model you're choosing between, scored on the same suite |
 | One shot per question | Retry on error, feeding the database's message back in |
 | No result shown to a human | The query displayed beside its answer, always, for the person who has to trust it |
 
-The last row is not a small one. Every system in this space that works long-term shows
+The last row isn't a small one. Every system in this space that works long-term shows
 the SQL to the person reading the number, because the reader is the last defense against
 a query that is confident, well-formed, and about the wrong thing.
 
